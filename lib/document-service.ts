@@ -1,6 +1,7 @@
 import { put, del } from "@vercel/blob"
 import { nanoid } from "nanoid"
 import type { Document, DocumentAnalysis, Transaction } from "@/types/documents"
+import { sql } from "./database"
 
 // Store for document metadata (in a real app, this would be a database)
 let documentsStore: Document[] = []
@@ -184,7 +185,7 @@ export async function getDocumentAnalysis(id: string): Promise<DocumentAnalysis 
   }
 }
 
-export async function getTransactions(): Promise<Transaction[]> {
+export async function getAllTransactions(): Promise<Transaction[]> {
   try {
     return transactionsStore
   } catch (error) {
@@ -192,6 +193,47 @@ export async function getTransactions(): Promise<Transaction[]> {
     throw new Error("Failed to fetch transactions")
   }
 }
+
+export async function getTransactions(filters = {}) {
+  try {
+    // Build a dynamic query based on filters
+    let query = "SELECT * FROM transactions"
+    const conditions = []
+    const values = []
+
+    // Add filter conditions if provided
+    if (filters.startDate) {
+      conditions.push(`date >= $${values.length + 1}`)
+      values.push(filters.startDate)
+    }
+
+    if (filters.endDate) {
+      conditions.push(`date <= $${values.length + 1}`)
+      values.push(filters.endDate)
+    }
+
+    if (filters.accountCode) {
+      conditions.push(`account_code = $${values.length + 1}`)
+      values.push(filters.accountCode)
+    }
+
+    // Add WHERE clause if conditions exist
+    if (conditions.length > 0) {
+      query += " WHERE " + conditions.join(" AND ")
+    }
+
+    // Add sorting
+    query += " ORDER BY date DESC"
+
+    // Execute the query
+    return await sql.unsafe(query, ...values)
+  } catch (error) {
+    console.error("Error in getTransactions:", error)
+    throw error
+  }
+}
+
+// Add more database operations as needed
 
 // Add this function to the existing document-service.ts file
 

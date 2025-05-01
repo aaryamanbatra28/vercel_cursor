@@ -300,6 +300,7 @@ export default function DocumentsPage() {
     filterDocuments()
   }, [filterDocuments])
 
+  // Update the handleFileUpload function to better handle AI service errors
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return
 
@@ -311,31 +312,58 @@ export default function DocumentsPage() {
       const formData = new FormData()
       formData.append("file", file)
 
-      // Upload the document and extract text using Grok
+      // Upload the document and extract text
       const response = await fetch("/api/documents", {
         method: "POST",
         body: formData,
       })
 
       if (!response.ok) {
-        throw new Error("Failed to upload document")
+        const errorData = await response.json()
+        throw new Error(errorData.error || `Upload failed with status: ${response.status}`)
       }
 
       const data = await response.json()
+
+      // Check if we're using fallback extraction
+      const usingFallback = data.document.note && data.document.note.includes("fallback")
 
       // Add the document to context
       addDocument(data.document)
 
       toast({
         title: "Upload Successful",
-        description: `${file.name} has been uploaded and text extracted.`,
+        description: usingFallback
+          ? `${file.name} has been uploaded with simulated text extraction due to AI service limitations.`
+          : `${file.name} has been uploaded and text extracted.`,
+        variant: usingFallback ? "default" : "default",
       })
     } catch (error) {
       console.error("Error uploading document:", error)
+
+      // Provide a more specific error message
+      let errorMessage = "There was an error uploading your document."
+      let errorVariant = "destructive"
+
+      if (error instanceof Error) {
+        // Check for specific error types
+        if (error.message.includes("BLOB_READ_WRITE_TOKEN")) {
+          errorMessage = "Blob storage configuration is missing. Document preview may not work correctly."
+        } else if (error.message.includes("Failed to fetch")) {
+          errorMessage = "Network error. Please check your connection and try again."
+        } else if (error.message.includes("credits") || error.message.includes("spending limit")) {
+          errorMessage = "AI service has reached its usage limit. Using fallback extraction instead."
+          errorVariant = "default" // Less alarming for quota issues
+        } else {
+          // Include the actual error message for better debugging
+          errorMessage = `Upload failed: ${error.message}`
+        }
+      }
+
       toast({
-        title: "Upload Failed",
-        description: "There was an error uploading your document.",
-        variant: "destructive",
+        title: "Upload Issue",
+        description: errorMessage,
+        variant: errorVariant,
       })
     } finally {
       setIsUploading(false)

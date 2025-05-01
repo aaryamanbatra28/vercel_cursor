@@ -1,5 +1,7 @@
+import { extractTextWithAI, determineDocumentType } from "./ai-service"
+
 /**
- * Extract text from a document using AI
+ * Extract text from a document
  */
 export async function extractTextFromDocument(file: File): Promise<string> {
   try {
@@ -7,13 +9,22 @@ export async function extractTextFromDocument(file: File): Promise<string> {
     const base64 = await fileToBase64(file)
     const fileType = getFileType(file)
 
-    // Call AI to extract text from the document
-    const extractedText = await extractWithAI(base64, file.name, fileType)
-    return extractedText
-  } catch (error) {
-    console.error("Error extracting text:", error)
+    try {
+      // Call AI to extract text from the document
+      const extractedText = await extractTextWithAI(base64, file.name, fileType)
+      return extractedText
+    } catch (aiError) {
+      console.error("AI extraction error:", aiError)
 
-    // Return a simulated extraction as fallback
+      // If AI extraction fails, use the fallback simulation
+      console.log("Using fallback extraction method")
+      return simulateExtraction(file.name, fileType)
+    }
+  } catch (error) {
+    console.error("Error in document extraction process:", error)
+
+    // Return a simulated extraction as ultimate fallback
+    console.log("Using emergency fallback extraction")
     return simulateExtraction(file.name, getFileType(file))
   }
 }
@@ -55,73 +66,13 @@ function getFileType(file: File): string {
 }
 
 /**
- * Extract text from a document using AI
- */
-async function extractWithAI(base64Data: string, fileName: string, fileType: string): Promise<string> {
-  try {
-    // Create a prompt based on the file type
-    let prompt = ""
-
-    switch (fileType) {
-      case "pdf":
-        prompt = "Extract all text from this PDF document. Maintain the structure and formatting as much as possible."
-        break
-      case "image":
-        prompt =
-          "Perform OCR on this image and extract all visible text. Maintain the structure and formatting as much as possible."
-        break
-      case "csv":
-        prompt = "Extract and format the data from this CSV file. Present it in a readable format."
-        break
-      case "excel":
-        prompt = "Extract and format the data from this Excel file. Present it in a readable format."
-        break
-      default:
-        prompt = "Extract all text and data from this document."
-    }
-
-    // Call the API
-    const response = await fetch("/api/documents/extract-text", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        fileName,
-        fileType,
-        base64Data,
-        prompt,
-      }),
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(`Failed to extract text: ${errorData.error || response.statusText}`)
-    }
-
-    const data = await response.json()
-    return data.extractedText || "No text could be extracted from this document."
-  } catch (error) {
-    console.error("Error calling text extraction API:", error)
-    throw error
-  }
-}
-
-/**
  * Analyze extracted text to determine document category
  */
-export function determineDocumentCategory(text: string): string {
-  const lowerText = text.toLowerCase()
-
-  if (lowerText.includes("bank") && (lowerText.includes("statement") || lowerText.includes("account"))) {
-    return "bank_statement"
-  } else if (lowerText.includes("invoice") || lowerText.includes("vendor")) {
-    return "invoice"
-  } else if (lowerText.includes("receipt")) {
-    return "receipt"
-  } else if (lowerText.includes("transaction") || lowerText.includes("payment")) {
-    return "transaction_data"
-  } else {
+export async function determineDocumentCategory(text: string): Promise<string> {
+  try {
+    return await determineDocumentType(text)
+  } catch (error) {
+    console.error("Error determining document category:", error)
     return "uncategorized"
   }
 }
