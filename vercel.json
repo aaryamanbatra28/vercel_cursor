@@ -6,7 +6,9 @@
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "15mb",
-        "runtime": "python3.9"
+        "runtime": "python3.9",
+        "includeFiles": ["backend/modules/**"],
+        "excludeFiles": ["**/*.pyc", "**/__pycache__/**"]
       }
     },
     {
@@ -23,5 +25,12 @@
       "src": "/(.*)",
       "dest": "/$1"
     }
-  ]
+  ],
+  "functions": {
+    "backend/main.py": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
+  "outputDirectory": "public"
 }

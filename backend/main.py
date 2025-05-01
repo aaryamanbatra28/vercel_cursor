@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
@@ -23,6 +23,25 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/api/python/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "ok", "message": "Python backend is running"}
+
+@app.get("/api/python/version")
+async def version():
+    """Return the version of the API"""
+    return {"version": "1.0.0"}
+
+@app.post("/api/python/echo")
+async def echo(request: Request):
+    """Echo the request body"""
+    try:
+        body = await request.json()
+        return {"echo": body}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 # Create temp directory for file storage
 temp_dir = Path(tempfile.gettempdir()) / "financial_controller"
