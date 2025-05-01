@@ -133,4 +133,4 @@ async def upload_forecast(file: UploadFile = File(...)):
         return {"message": "Forecast data uploaded successfully"}
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))

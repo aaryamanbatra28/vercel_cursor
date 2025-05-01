@@ -150,4 +150,4 @@ async def generate_cash_flow(request: FinancialStatementRequest):
         return result
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))

@@ -13,27 +13,27 @@ This is the backend service for the Financial Controller AI platform, providing 
 ## Setup
 
 1. Create a virtual environment:
-```bash
+\`\`\`bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+\`\`\`
 
 2. Install dependencies:
-```bash
+\`\`\`bash
 pip install -r requirements.txt
-```
+\`\`\`
 
 3. Set up environment variables:
 Create a `.env` file in the backend directory with:
-```
+\`\`\`
 OPENAI_API_KEY=your_openai_api_key
 DATABASE_URL=sqlite:///ledger.db
-```
+\`\`\`
 
 4. Run the server:
-```bash
+\`\`\`bash
 uvicorn main:app --reload
-```
+\`\`\`
 
 ## API Endpoints
 
@@ -86,9 +86,9 @@ uvicorn main:app --reload
 ## Testing
 
 Run tests with:
-```bash
+\`\`\`bash
 pytest
-```
+\`\`\`
 
 ## Security Considerations
 
@@ -96,4 +96,4 @@ pytest
 2. Use proper authentication for API endpoints
 3. Implement rate limiting
 4. Encrypt sensitive data
-5. Regular backups of the database 
+5. Regular backups of the database
