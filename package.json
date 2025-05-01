@@ -1,0 +1,13 @@
+{
+  "name": "financial-controller-ai",
+  "version": "1.0.0",
+  "description": "AI-powered financial controller for automated accounting tasks",
+  "scripts": {
+    "vercel": "vercel",
+    "vercel:dev": "vercel dev",
+    "vercel:prod": "vercel --prod"
+  },
+  "devDependencies": {
+    "vercel": "^32.5.1"
+  }
+}
